@@ -47,5 +47,106 @@
  *   //      frequentContact: "Swiggy", allAbove100: false, hasLargeTransaction: true }
  */
 export function analyzeUPITransactions(transactions) {
-  // Your code here
+  if (!Array.isArray(transactions) || transactions.length === 0) return null;
+
+  const filteredTransactions = transactions.filter((t) => {
+    return (t.type === "debit" || t.type === "credit") && t.amount > 0;
+  });
+  if (filteredTransactions.length === 0) return null;
+
+  const totalCredit = transactions.reduce((total, current) => {
+    if (current.type === "credit" && current.amount > 0)
+      return total + current.amount;
+    return total;
+  }, 0);
+
+  const totalDebit = transactions.reduce((total, current) => {
+    if (current.type === "debit" && current.amount > 0)
+      return total + current.amount;
+    return total;
+  }, 0);
+
+  const netBalance = totalCredit - totalDebit;
+
+  const transactionCount = transactions.reduce((count, current) => {
+    if (
+      (current.type === "debit" || current.type === "credit") &&
+      current.amount > 0
+    )
+      return (count = count + 1);
+    return count;
+  }, 0);
+
+  const totalValidAmout = transactions.reduce((total, current) => {
+    if (
+      (current.type === "debit" || current.type === "credit") &&
+      current.amount > 0
+    )
+      return total + current.amount;
+    return total;
+  }, 0);
+
+  const avgTransaction = Math.round(totalValidAmout / transactionCount);
+
+  const highestTransaction = transactions.reduce((highest, current) => {
+    if (!highest.amount) return current;
+    if (current.amount > highest.amount) return current;
+    return highest;
+  }, {});
+
+  const categoryBreakdown = transactions.reduce((breakdown, current) => {
+    if (
+      (current.type !== "debit" && current.type !== "credit") ||
+      current.amount < 0
+    )
+      return breakdown;
+
+    if (!breakdown[current.category])
+      breakdown[current.category] = current.amount;
+    else breakdown[current.category] += current.amount;
+    return breakdown;
+  }, {});
+
+  const transactionCountByRecipient = transactions.reduce(
+    (frequent, current) => {
+      if (!frequent[current.to]) frequent[current.to] = 1;
+      else frequent[current.to]++;
+      return frequent;
+    },
+    {},
+  );
+
+  const frequentContact = Object.entries(transactionCountByRecipient).reduce(
+    (frequent, current) => {
+      // if(!frequent) frequent = current[0]
+      if (current[1] > frequent[1]) return current;
+      return frequent;
+    },
+    ["", 0],
+  )[0];
+
+  const allAbove100 = transactions
+    .filter((t) => {
+      return (t.type === "debit" || t.type === "credit") && t.amount > 0;
+    })
+    .every((t) => t.amount > 100);
+
+  const hasLargeTransaction = transactions
+    .filter((t) => {
+      return (t.type === "debit" || t.type === "credit") && t.amount > 0;
+    })
+    .some((t) => t.amount >= 5000);
+
+  return {
+    totalCredit,
+    totalDebit,
+    netBalance,
+    transactionCount,
+    avgTransaction,
+    highestTransaction,
+    categoryBreakdown,
+    frequentContact,
+    allAbove100,
+    hasLargeTransaction,
+  };
 }
